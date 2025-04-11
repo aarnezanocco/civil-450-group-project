@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import os
 import nbimporter
-from Task2_functions import iterate_T_cl
+from copie_Task2_functions import iterate_T_cl
 
 # Constants
 SEUIL_VA = 0.05   # Threshold for airspeed to determine the convection type
@@ -73,13 +73,27 @@ for height, url in csv_files.items():
     #t_cl = np.array([
         #iterate_T_cl(t_skin_i, ta_i, mrt_i, va_i, I_CL)
         #for t_skin_i, ta_i, mrt_i, va_i in zip(t_skin_series, ta, mrt_values, va)])
-
-    t_cl, _, _, _ = iterate_T_cl(t_skin_avg, ta, mrt_values, I_CL, va, epsilon=0.95, max_iter=100, tol=0.01)
+   
+    t_cl = np.array([iterate_T_cl(t_skin_i, ta_i, mrt_i, I_CL, va_i)[0] for t_skin_i, ta_i, mrt_i, va_i in zip(t_skin_avg, ta, mrt_values, va)])
+    if len(t_cl) < len(ta):
+         missing = len(ta) - len(t_cl)
+         last_val = t_cl[-1]
+         t_cl = np.concatenate([t_cl, [last_val] * missing])
 
     #Compute LOT
     LOT_values = np.array([compute_LOT(ta_i, va_i, mrt_i, t_cl_i) for ta_i, va_i, mrt_i, t_cl_i in zip(ta, va, mrt_values, t_cl)])
        
-    mot_values = np.mean(LOT_values)  #Calculation for MOT
+    mot_values = np.nanmean(LOT_values)  #Calculation for MOT
+
+    print("Lengths check:")
+    print("date_time:", len(date_time))
+    print("ta:", len(ta))
+    print("tg:", len(tg))
+    print("va:", len(va))
+    print("mrt_values:", len(mrt_values))
+    print("t_cl:", len(t_cl))
+    print("LOT_values:", len(LOT_values))
+    print("MOT broadcast:", len([mot_values] * len(ta)))
 
     # Store results in a DataFrame
     df_results = pd.DataFrame({
